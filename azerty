@@ -1,0 +1,356 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_ETUDIANTS 100
+#define MAX_NOM 50
+#define MAX_MATRICULE 20
+
+// Structure pour représenter un étudiant
+typedef struct {
+    char matricule[MAX_MATRICULE];
+    char nom[MAX_NOM];
+    char prenom[MAX_NOM];
+    int age;
+    float moyenne;
+} Etudiant;
+
+// Variables globales
+Etudiant listeEtudiants[MAX_ETUDIANTS];
+int nombreEtudiants = 0;
+
+// Prototypes des fonctions
+void initialiserDonnees();
+void afficherMenu();
+void afficherEtudiant(Etudiant e);
+void ajouterEtudiant();
+void afficherTousEtudiants();
+int rechercherParMatricule(char matricule[]);
+int rechercheDichotomique(char matricule[], int debut, int fin);
+void supprimerEtudiant();
+void trierParMatricule();
+void rechercherEtudiantMenu();
+void rechercherDichotomiqueMenu();
+
+// Fonction principale
+int main() {
+    int choix;
+    
+    // Initialiser avec quelques étudiants pour les tests
+    initialiserDonnees();
+    
+    do {
+        afficherMenu();
+        printf("\nVotre choix : ");
+        scanf("%d", &choix);
+        
+        switch(choix) {
+            case 1:
+                ajouterEtudiant();
+                break;
+            case 2:
+                afficherTousEtudiants();
+                break;
+            case 3:
+                rechercherEtudiantMenu();
+                break;
+            case 4:
+                rechercherDichotomiqueMenu();
+                break;
+            case 5:
+                supprimerEtudiant();
+                break;
+            case 6:
+                trierParMatricule();
+                printf("Liste triee par matricule avec succes !\n");
+                break;
+            case 0:
+                printf("Au revoir !\n");
+                break;
+            default:
+                printf("Choix invalide ! Veuillez reessayer.\n");
+        }
+        
+        printf("\nAppuyez sur Entree pour continuer...");
+        getchar();
+        getchar();
+        
+    } while(choix != 0);
+    
+    return 0;
+}
+
+// Fonction pour initialiser avec des données de test
+void initialiserDonnees() {
+    // Étudiant 1
+    strcpy(listeEtudiants[0].matricule, "ETU001");
+    strcpy(listeEtudiants[0].nom, "Dupont");
+    strcpy(listeEtudiants[0].prenom, "Jean");
+    listeEtudiants[0].age = 20;
+    listeEtudiants[0].moyenne = 15.5;
+    
+    // Étudiant 2
+    strcpy(listeEtudiants[1].matricule, "ETU003");
+    strcpy(listeEtudiants[1].nom, "Martin");
+    strcpy(listeEtudiants[1].prenom, "Marie");
+    listeEtudiants[1].age = 22;
+    listeEtudiants[1].moyenne = 16.2;
+    
+    // Étudiant 3
+    strcpy(listeEtudiants[2].matricule, "ETU002");
+    strcpy(listeEtudiants[2].nom, "Bernard");
+    strcpy(listeEtudiants[2].prenom, "Pierre");
+    listeEtudiants[2].age = 21;
+    listeEtudiants[2].moyenne = 14.8;
+    
+    nombreEtudiants = 3;
+}
+
+// Menu principal
+void afficherMenu() {
+    system("clear"); // Pour Linux/Mac
+    // system("cls"); // Pour Windows
+    
+    printf("=================================\n");
+    printf("   GESTION DES ETUDIANTS\n");
+    printf("=================================\n");
+    printf("1. Ajouter un etudiant\n");
+    printf("2. Afficher tous les etudiants\n");
+    printf("3. Rechercher par matricule (lineaire)\n");
+    printf("4. Recherche dichotomique par matricule\n");
+    printf("5. Supprimer un etudiant\n");
+    printf("6. Trier par matricule\n");
+    printf("0. Quitter\n");
+    printf("=================================\n");
+}
+
+// Afficher les informations d'un étudiant
+void afficherEtudiant(Etudiant e) {
+    printf("---------------------------------\n");
+    printf("Matricule : %s\n", e.matricule);
+    printf("Nom       : %s\n", e.nom);
+    printf("Prenom    : %s\n", e.prenom);
+    printf("Age       : %d ans\n", e.age);
+    printf("Moyenne   : %.2f/20\n", e.moyenne);
+    printf("---------------------------------\n");
+}
+
+// Ajouter un nouvel étudiant
+void ajouterEtudiant() {
+    if(nombreEtudiants >= MAX_ETUDIANTS) {
+        printf("La liste est pleine ! Impossible d'ajouter un nouvel etudiant.\n");
+        return;
+    }
+    
+    printf("\n--- AJOUT D'UN NOUVEL ETUDIANT ---\n");
+    
+    printf("Matricule : ");
+    scanf("%s", listeEtudiants[nombreEtudiants].matricule);
+    
+    // Vérifier si le matricule existe déjà
+    if(rechercherParMatricule(listeEtudiants[nombreEtudiants].matricule) != -1) {
+        printf("Erreur : Ce matricule existe deja !\n");
+        return;
+    }
+    
+    printf("Nom : ");
+    scanf("%s", listeEtudiants[nombreEtudiants].nom);
+    
+    printf("Prenom : ");
+    scanf("%s", listeEtudiants[nombreEtudiants].prenom);
+    
+    printf("Age : ");
+    scanf("%d", &listeEtudiants[nombreEtudiants].age);
+    
+    printf("Moyenne : ");
+    scanf("%f", &listeEtudiants[nombreEtudiants].moyenne);
+    
+    nombreEtudiants++;
+    printf("\nEtudiant ajoute avec succes !\n");
+}
+
+// Afficher tous les étudiants
+void afficherTousEtudiants() {
+    if(nombreEtudiants == 0) {
+        printf("Aucun etudiant dans la liste.\n");
+        return;
+    }
+    
+    printf("\n--- LISTE DES ETUDIANTS (%d) ---\n", nombreEtudiants);
+    
+    for(int i = 0; i < nombreEtudiants; i++) {
+        printf("\nEtudiant %d :\n", i+1);
+        afficherEtudiant(listeEtudiants[i]);
+    }
+}
+
+// RECHERCHE PAR MATRICULE (Recherche linéaire)
+int rechercherParMatricule(char matricule[]) {
+    for(int i = 0; i < nombreEtudiants; i++) {
+        if(strcmp(listeEtudiants[i].matricule, matricule) == 0) {
+            return i; // Retourne l'indice de l'étudiant
+        }
+    }
+    return -1; // Non trouvé
+}
+
+// RECHERCHE DICHOTOMIQUE (Recherche binaire)
+int rechercheDichotomique(char matricule[], int debut, int fin) {
+    // Vérifier si le tableau est trié
+    for(int i = 0; i < nombreEtudiants - 1; i++) {
+        if(strcmp(listeEtudiants[i].matricule, listeEtudiants[i+1].matricule) > 0) {
+            printf("Attention : Le tableau doit etre trie pour la recherche dichotomique !\n");
+            return -2; // Code d'erreur pour tableau non trié
+        }
+    }
+    
+    while(debut <= fin) {
+        int milieu = (debut + fin) / 2;
+        int comparison = strcmp(listeEtudiants[milieu].matricule, matricule);
+        
+        if(comparison == 0) {
+            return milieu; // Trouvé
+        }
+        else if(comparison < 0) {
+            debut = milieu + 1;
+        }
+        else {
+            fin = milieu - 1;
+        }
+    }
+    
+    return -1; // Non trouvé
+}
+
+// SUPPRIMER UN ÉTUDIANT
+void supprimerEtudiant() {
+    if(nombreEtudiants == 0) {
+        printf("La liste est vide !\n");
+        return;
+    }
+    
+    char matricule[MAX_MATRICULE];
+    int index;
+    
+    printf("\n--- SUPPRESSION D'UN ETUDIANT ---\n");
+    printf("Entrez le matricule de l'etudiant a supprimer : ");
+    scanf("%s", matricule);
+    
+    // Rechercher l'étudiant
+    index = rechercherParMatricule(matricule);
+    
+    if(index == -1) {
+        printf("Aucun etudiant trouve avec le matricule : %s\n", matricule);
+        return;
+    }
+    
+    // Afficher l'étudiant trouvé
+    printf("\nEtudiant trouve :\n");
+    afficherEtudiant(listeEtudiants[index]);
+    
+    // Demander confirmation
+    char confirmation;
+    printf("Voulez-vous vraiment supprimer cet etudiant ? (O/N) : ");
+    scanf(" %c", &confirmation);
+    
+    if(toupper(confirmation) == 'O') {
+        // Décaler les éléments vers la gauche
+        for(int i = index; i < nombreEtudiants - 1; i++) {
+            listeEtudiants[i] = listeEtudiants[i + 1];
+        }
+        
+        nombreEtudiants--;
+        printf("\nEtudiant supprime avec succes !\n");
+    }
+    else {
+        printf("\nSuppression annulee.\n");
+    }
+}
+
+// Trier les étudiants par matricule (tri à bulles)
+void trierParMatricule() {
+    if(nombreEtudiants < 2) return;
+    
+    Etudiant temp;
+    int i, j;
+    
+    for(i = 0; i < nombreEtudiants - 1; i++) {
+        for(j = 0; j < nombreEtudiants - i - 1; j++) {
+            if(strcmp(listeEtudiants[j].matricule, listeEtudiants[j + 1].matricule) > 0) {
+                // Échanger les éléments
+                temp = listeEtudiants[j];
+                listeEtudiants[j] = listeEtudiants[j + 1];
+                listeEtudiants[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Menu pour la recherche linéaire
+void rechercherEtudiantMenu() {
+    char matricule[MAX_MATRICULE];
+    
+    printf("\n--- RECHERCHE PAR MATRICULE ---\n");
+    printf("Entrez le matricule a rechercher : ");
+    scanf("%s", matricule);
+    
+    int index = rechercherParMatricule(matricule);
+    
+    if(index != -1) {
+        printf("\nEtudiant trouve !\n");
+        afficherEtudiant(listeEtudiants[index]);
+    }
+    else {
+        printf("\nAucun etudiant trouve avec le matricule : %s\n", matricule);
+    }
+}
+
+// Menu pour la recherche dichotomique
+void rechercherDichotomiqueMenu() {
+    char matricule[MAX_MATRICULE];
+    
+    printf("\n--- RECHERCHE DICHOTOMIQUE ---\n");
+    
+    // Vérifier si le tableau est trié
+    int estTrie = 1;
+    for(int i = 0; i < nombreEtudiants - 1; i++) {
+        if(strcmp(listeEtudiants[i].matricule, listeEtudiants[i+1].matricule) > 0) {
+            estTrie = 0;
+            break;
+        }
+    }
+    
+    if(!estTrie && nombreEtudiants > 1) {
+        printf("Attention : Le tableau n'est pas trie.\n");
+        printf("Voulez-vous le trier maintenant ? (O/N) : ");
+        
+        char choix;
+        scanf(" %c", &choix);
+        
+        if(toupper(choix) == 'O') {
+            trierParMatricule();
+            printf("Tableau trie avec succes.\n");
+        }
+        else {
+            printf("La recherche dichotomique necessite un tableau trie.\n");
+            return;
+        }
+    }
+    
+    printf("Entrez le matricule a rechercher : ");
+    scanf("%s", matricule);
+    
+    int index = rechercheDichotomique(matricule, 0, nombreEtudiants - 1);
+    
+    if(index == -2) {
+        printf("Erreur : Tableau non trie.\n");
+    }
+    else if(index != -1) {
+        printf("\nEtudiant trouve a la position %d !\n", index);
+        afficherEtudiant(listeEtudiants[index]);
+    }
+    else {
+        printf("\nAucun etudiant trouve avec le matricule : %s\n", matricule);
+    }
+}
